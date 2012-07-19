@@ -1,0 +1,27 @@
+{
+    "id":                 "handsontable",
+    "name":               "Handsontable",
+    "description":        "Spreadsheet Tool",
+    "type":               "contrib",
+    "enabled":            true,
+    "hasSettings":        true,
+    "url":                "/devwidgets/handsontable/handsontable.html",
+    "img":                "/devwidgets/handsontable/images/handsontable.png",
+    "i18n": {
+        "default": {
+            "bundle":        "/devwidgets/handsontable/bundles/default.properties",
+            "name":           "Handsontable",
+            "description":    "Spreadsheet Tool"
+        },
+        "nl_NL": {
+            "bundle":        "/devwidgets/handsontable/bundles/nl_NL.properties"
+        }
+    },
+    "personalportal":     false,
+    "sakaidocs":          true,
+    "showinsakaigoodies": true,
+    "groupdashboard":     false,
+    "grouppages":         false,
+    "userdashboard":      false,
+    "userpages":          false
+}
