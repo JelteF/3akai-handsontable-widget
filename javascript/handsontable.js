@@ -43,6 +43,7 @@ require(['jquery', 'sakai/sakai.api.core',
         /////////////////////////////
         var DEFAULT_SIZE = '5x5';
         var DEFAULT_EMPTY = '1x1';
+        var DEFAULT_TABLE_DATA = [['']];
 
 
         // DOM jQuery Objects
@@ -54,7 +55,7 @@ require(['jquery', 'sakai/sakai.api.core',
         var $size = $('#handsontable_table_size', $rootel);
         var $empty = $('#handsontable_empty_fields', $rootel);
         var $previewTable = $('#handsontable_preview_table', $rootel);
-        var $previewButton = $('#handsontable_preview_button', $rootel);
+        var $updateButton = $('#handsontable_update_button', $rootel);
 
         ///////////////////////
         // Utility functions //
@@ -106,10 +107,10 @@ require(['jquery', 'sakai/sakai.api.core',
             sakai.api.Widgets.loadWidgetData(tuid, function(success, data) {
                 if (success) {
                     // fetching the data succeeded, send it to the callback function
-                    callback(checkSize(data.size), checkEmpty(data.empty));
+                    callback(checkSize(data.size), checkEmpty(data.empty), data.tableData);
                 } else {
                     // fetching the data failed, we use the default values
-                    callback(toDimensions(DEFAULT_SIZE), toDimensions(DEFAULT_EMPTY));
+                    callback(toDimensions(DEFAULT_SIZE), toDimensions(DEFAULT_EMPTY), DEFAULT_TABLE_DATA);
                 }
             });
         };
@@ -124,14 +125,14 @@ require(['jquery', 'sakai/sakai.api.core',
          * @param {String} fileURL The URL of the JSON file
          */
 
-        var showMainView = function(size, empty) {
+        var showMainView = function(size, empty, tableData) {
 
-            renderTable(size, empty, $mainContainer);
+            renderTable(size, empty, tableData, $mainContainer);
             $mainContainer.show();
 
         }
 
-        var renderTable = function(size, empty, $container) {
+        var renderTable = function(size, empty, tableData, $container) {
             $container.handsontable({
                 cols: size[0],
                 rows: size[1],
@@ -141,6 +142,7 @@ require(['jquery', 'sakai/sakai.api.core',
                 rowHeaders: true,
                 contextMenu: true
             });
+            $container.handsontable('loadData', tableData);
 
         }
 
@@ -154,13 +156,14 @@ require(['jquery', 'sakai/sakai.api.core',
          *
          * @param {String} fileURL The profile or query string
          */
-        var renderSettings = function(size, empty) {
+        var renderSettings = function(size, empty, tableData) {
             $size.val(size[0] + 'x' + size[1]);
             $empty.val(empty[0] + 'x' + empty[1]);
+            showPreview(size, empty, tableData);
         };
 
-        var showPreview = function(size, empty){
-            renderTable(size, empty, $previewTable);
+        var showPreview = function(size, empty, tableData){
+            renderTable(size, empty, tableData, $previewTable);
         }
 
 
@@ -172,10 +175,12 @@ require(['jquery', 'sakai/sakai.api.core',
             // get the selected input
             var size = $size.val();
             var empty = $empty.val();
+            var tableData = $previewTable.handsontable('getData');
             // save the selected input
             sakai.api.Widgets.saveWidgetData(tuid, {
                 size: size,
-                empty: empty
+                empty: empty,
+                tableData: tableData
             },
                 function(success, data) {
                     if (success) {
@@ -191,10 +196,12 @@ require(['jquery', 'sakai/sakai.api.core',
             sakai.api.Widgets.Container.informCancel(tuid, 'handsontable');
         });
 
-        $previewButton.on('click', function() {
+        $updateButton.on('click', function() {
             var size = checkSize($size.val());
             var empty = checkEmpty($empty.val());
-            showPreview(size, empty);
+            var tableData = $previewTable.handsontable('getData');
+            console.log(tableData);
+            showPreview(size, empty, tableData);
         });
 
 
