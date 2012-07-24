@@ -137,7 +137,9 @@ require(['jquery', 'sakai/sakai.api.core',
                 rows: size[1],
                 minSpareCols: empty[0],
                 minSpareRows: empty[1],
-                contextMenu: true
+                colHeaders: true,
+                rowHeaders: true,
+                contextMenu: false
             });
 
         }
@@ -201,7 +203,7 @@ require(['jquery', 'sakai/sakai.api.core',
         /////////////////////////////
 
         var loadStylsheets = function() {
-            sakai.api.Util.include.css('/devwidgets/handsontable/jquery-handsontable/lib/jQuery-contextMenu/jquery.contextMenu.css');
+//            sakai.api.Util.include.css('/devwidgets/handsontable/jquery-handsontable/lib/jQuery-contextMenu/jquery.contextMenu.css');
             sakai.api.Util.include.css('/devwidgets/handsontable/jquery-handsontable/jquery.handsontable.css');
         };
         /**
