@@ -128,6 +128,7 @@ require(['jquery', 'sakai/sakai.api.core',
         var showMainView = function(size, empty, tableData) {
 
             renderTable(size, empty, tableData, $mainContainer);
+            $mainContainer.find('.htColHeader.htRowHeader').css('min-width', '50px');
             $mainContainer.show();
 
         }
