@@ -41,7 +41,7 @@
 
 #handsontable_main {
     max-height: 450px;
-    overflow: scroll;
+    overflow: auto;
 }
 
 /*
@@ -49,6 +49,6 @@
  */
 
 #handsontable_preview_table {
-    max-height: 450;
-    overflow: scroll;
+    max-height: 450px;
+    overflow: auto;
 }
