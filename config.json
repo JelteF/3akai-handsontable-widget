@@ -20,8 +20,4 @@
     "personalportal":     false,
     "sakaidocs":          true,
     "showinsakaigoodies": true,
-    "groupdashboard":     false,
-    "grouppages":         false,
-    "userdashboard":      false,
-    "userpages":          false
 }

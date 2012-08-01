@@ -27,14 +27,6 @@
     width: 200;
 }
 
-/* widget icon (for widgets that may appear on a dashboard)
-   icons are usually around 18 x 18 pixels */
-.handsontable.s3d-widget .s3d-widget-titlebar .widget_title {
-    background: url('/devwidgets/handsontable/images/handsontable_icon.png')
-        18px 18px no-repeat;
-}
-
-
 /*
  * Main View CSS
  */
