@@ -68,6 +68,7 @@ Maybe you want to show some default data. Use the `handsontable('loadData', data
  handsontable('getCellMeta', row, col)                                                 | Method      | Return meta data for given `row,col`. Currently has one property: isReadOnly (Boolean)
  handsontable('selectCell', r, c, [r2, c2, scrollToSelection=true])                    | Method      | Select cell `r,c` or range finishing at `r2,c2`. By default, viewport will be scrolled to selection
  handsontable('deselectCell')                                                          | Method      | Deselect current selection
+ handsontable('getSelected')                                                           | Method      | Returns index of the currently selected cells as an array [`topLeftRow`, `topLeftCol`, `bottomRightRow`, `bottomRightCol`]
 
 ## Options
 
@@ -90,6 +91,8 @@ The table below presents configuration options that are interpreted by `handsont
  `enterBeginsEditing` | Boolean                               | true             | If true, ENTER begins editing mode (like Google Docs). If false, ENTER moves to next row (like Excel) and adds new row if necessary. TAB adds new column if necessary.
  `enterMoves`         | Object                                | {row: 1, col: 0} | Defines cursor move after Enter is pressed (Shift+Enter uses negative vector)
  `tabMoves`           | Object                                | {row: 0, col: 1} | Defines cursor move after Tab is pressed (Shift+Tab uses negative vector)
+ `autoWrapRow`        | Boolean                               | false            | If true, pressing TAB or right arrow in the last column will move to first column in next row
+ `autoWrapCol`        | Boolean                               | false            | If true, pressing ENTER or down arrow in the last row will move to first row in next column
  `legend`             | Array                                 | _undefined_      | Legend definitions. See **Defining legend**
  `autocomplete`       | Array                                 | _undefined_      | Autocomplete definitions. See **Defining autocomplete**
  `onSelection`        | Function(r,&nbsp;c,&nbsp;r2,&nbsp;c2) | _undefined_      | Callback to be fired before one or more cells is selected. Params `r, c` are the coordinates of the selection start, params `r2, c2` are the selection end. You can call updateSettings from inside, e.g. if you want to disable fillHandle in one column.

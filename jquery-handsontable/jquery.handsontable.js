@@ -27,7 +27,8 @@
       hasLegend: null,
       lastAutoComplete: null,
       undoRedo: settings.undo ? new handsontable.UndoRedo(this) : null,
-      extensions: {}
+      extensions: {},
+      stopNextPropagation: 0
     };
 
     var lastChange = '';
@@ -40,6 +41,23 @@
       else {
         return false;
       }
+    }
+
+    /**
+     * Measure the width and height of browser scrollbar
+     * @return {Object}
+     */
+    function measureScrollbar() {
+      var div = $('<div style="width:150px;height:150px;overflow:hidden;position:absolute;top:200px;left:200px"><div style="width:100%;height:100%;position:absolute">x</div>');
+      $('body').append(div);
+      var subDiv = $(div[0].firstChild);
+      var w1 = subDiv.innerWidth();
+      var h1 = subDiv.innerHeight();
+      div[0].style.overflow = 'scroll';
+      w1 -= subDiv.innerWidth();
+      h1 -= subDiv.innerHeight();
+      div.remove();
+      return {width: w1, height: h1};
     }
 
     /**
@@ -303,7 +321,7 @@
             datamap.createRow(coords);
             grid.createRow(coords);
             self.blockedCols.refresh();
-            if (priv.selStart.row >= coords.row) {
+            if (priv.selStart && priv.selStart.row >= coords.row) {
               priv.selStart.row = priv.selStart.row + 1;
               selection.transformEnd(1, 0);
             }
@@ -316,7 +334,7 @@
             datamap.createCol(coords);
             grid.createCol(coords);
             self.blockedRows.refresh();
-            if (priv.selStart.col >= coords.col) {
+            if (priv.selStart && priv.selStart.col >= coords.col) {
               priv.selStart.col = priv.selStart.col + 1;
               selection.transformEnd(0, 1);
             }
@@ -332,10 +350,10 @@
             if (!result) {
               self.blockedCols.refresh();
             }
-            if (priv.selStart.row > coords.row) {
+            if (priv.selStart && priv.selStart.row > coords.row) {
               priv.selStart.row = priv.selStart.row - (toCoords.row - coords.row + 1);
             }
-            if (priv.selEnd.row > coords.row) {
+            if (priv.selEnd && priv.selEnd.row > coords.row) {
               selection.transformEnd(-(toCoords.row - coords.row + 1), 0);
             }
             else {
@@ -350,10 +368,10 @@
             if (!result) {
               self.blockedRows.refresh();
             }
-            if (priv.selStart.col > coords.col) {
+            if (priv.selStart && priv.selStart.col > coords.col) {
               priv.selStart.col = priv.selStart.col - (toCoords.col - coords.col + 1);
             }
-            if (priv.selEnd.col > coords.col) {
+            if (priv.selEnd && priv.selEnd.col > coords.col) {
               selection.transformEnd(0, -(toCoords.col - coords.col + 1));
             }
             else {
@@ -895,12 +913,12 @@
           if (force && priv.settings.minSpareRows > 0) {
             self.alter("insert_row", self.rowCount);
           }
-          else if (priv.selStart.col + colDelta < self.colCount - 1) {
+          else if (priv.settings.autoWrapCol && priv.selStart.col + colDelta < self.colCount - 1) {
             rowDelta = 1 - self.rowCount;
             colDelta = 1;
           }
         }
-        else if (priv.selStart.row + rowDelta < 0 && priv.selStart.col + colDelta >= 0) {
+        else if (priv.settings.autoWrapCol && priv.selStart.row + rowDelta < 0 && priv.selStart.col + colDelta >= 0) {
           rowDelta = self.rowCount - 1;
           colDelta = -1;
         }
@@ -908,12 +926,12 @@
           if (force && priv.settings.minSpareCols > 0) {
             self.alter("insert_col", self.colCount);
           }
-          else if (priv.selStart.row + rowDelta < self.rowCount - 1) {
+          else if (priv.settings.autoWrapRow && priv.selStart.row + rowDelta < self.rowCount - 1) {
             rowDelta = 1;
             colDelta = 1 - self.colCount;
           }
         }
-        else if (priv.selStart.col + colDelta < 0 && priv.selStart.row + rowDelta >= 0) {
+        else if (priv.settings.autoWrapRow && priv.selStart.col + colDelta < 0 && priv.selStart.row + rowDelta >= 0) {
           rowDelta = -1;
           colDelta = self.colCount - 1;
         }
@@ -933,12 +951,14 @@
        * Sets selection end cell relative to current selection end cell (if possible)
        */
       transformEnd: function (rowDelta, colDelta) {
-        var td = grid.getCellAtCoords({
-          row: (priv.selEnd.row + rowDelta),
-          col: priv.selEnd.col + colDelta
-        });
-        if (td) {
-          selection.setRangeEnd(td);
+        if (priv.selEnd) {
+          var td = grid.getCellAtCoords({
+            row: (priv.selEnd.row + rowDelta),
+            col: priv.selEnd.col + colDelta
+          });
+          if (td) {
+            selection.setRangeEnd(td);
+          }
         }
       },
 
@@ -1022,6 +1042,10 @@
         }
         if (changes.length) {
           self.container.triggerHandler("datachange.handsontable", [changes, 'empty']);
+          setTimeout(function () {
+            self.blockedRows.dimensions(changes);
+            self.blockedCols.dimensions(changes);
+          }, 10);
         }
         grid.keepEmptyRows();
         selection.refreshBorders();
@@ -1077,8 +1101,8 @@
         var tdOffset = $td.offset();
         var scrollLeft = priv.scrollable.scrollLeft(); //scrollbar position
         var scrollTop = priv.scrollable.scrollTop(); //scrollbar position
-        var scrollWidth = priv.scrollable.outerWidth() - 24; //24 = scrollbar
-        var scrollHeight = priv.scrollable.outerHeight() - 24; //24 = scrollbar
+        var scrollWidth = priv.scrollable.outerWidth() - priv.scrollbarSize.width;
+        var scrollHeight = priv.scrollable.outerHeight() - priv.scrollbarSize.height;
         var scrollOffset = priv.scrollable.offset();
 
         var rowHeaderWidth = self.blockedCols.count() ? $(self.blockedCols.main[0].firstChild).outerWidth() : 2;
@@ -1348,8 +1372,12 @@
                     priv.undoRedo.undo();
                   }
                 }
+                priv.stopNextPropagation++; //don't want autosuggest to show ctrl-shortcut
               }
               return;
+            }
+            else if (event.keyCode === 17) { //ctrl is down
+              priv.stopNextPropagation++; //don't want autosuggest to show ctrl-shortcut
             }
 
             var rangeModifier = event.shiftKey ? selection.setRangeEnd : selection.setRangeStart;
@@ -1494,7 +1522,7 @@
                       }
                     }
                     else {
-                      selection.transformStart(r, c); //move selection down
+                      selection.transformStart(r, c, true); //move selection down or create new row
                     }
                   }
                 }
@@ -1540,7 +1568,7 @@
         function onKeyUp(event) {
           if (priv.stopNextPropagation) {
             event.stopImmediatePropagation();
-            priv.stopNextPropagation = false;
+            priv.stopNextPropagation--;
           }
         }
 
@@ -1575,6 +1603,10 @@
        * Prepare text input to be displayed at given grid cell
        */
       prepare: function () {
+        if (priv.isCellEdited) {
+          return;
+        }
+
         priv.editProxy.height(priv.editProxy.parent().innerHeight() - 4);
         priv.editProxy.val(datamap.getText(priv.selStart, priv.selEnd));
         setTimeout(editproxy.focus, 1);
@@ -1764,7 +1796,7 @@
           overflow: 'visible'
         });
 
-        priv.stopNextPropagation = true;
+        priv.stopNextPropagation++;
         if (priv.settings.autoComplete) {
           setTimeout(function () {
             priv.editProxy.data('typeahead').lookup();
@@ -1876,7 +1908,7 @@
       onDblClick: function () {
         priv.editProxy[0].focus();
         editproxy.beginEditing(true);
-        priv.stopNextPropagation = false;
+        priv.stopNextPropagation--;
       }
     };
 
@@ -1891,6 +1923,7 @@
 
       self.curScrollTop = self.curScrollLeft = 0;
       self.lastScrollTop = self.lastScrollLeft = null;
+      priv.scrollbarSize = measureScrollbar();
 
       var div = $('<div><table cellspacing="0" cellpadding="0"><thead></thead><tbody></tbody></table></div>');
       priv.tableContainer = div[0];
@@ -2165,7 +2198,27 @@
       if (!recreated) {
         selection.refreshBorders();
       }
+      setTimeout(function () {
+        if (!refreshRows) {
+          self.blockedRows.dimensions(values);
+        }
+        if (!refreshCols) {
+          self.blockedCols.dimensions(values);
+        }
+      }, 10);
       return td;
+    };
+
+    /**
+     * Returns current selection. Returns undefined if there is no selection.
+     * @public
+     * @return {Array} [topLeftRow, topLeftCol, bottomRightRow, bottomRightCol]
+     */
+    this.getSelected = function () { //https://github.com/warpech/jquery-handsontable/issues/44  //cjl
+      if (selection.isSelected()) {
+        var coords = grid.getCornerCoords([priv.selStart, priv.selEnd]);
+        return [coords.TL.row, coords.TL.col, coords.BR.row, coords.BR.col];
+      }
     };
 
     /**
@@ -2337,6 +2390,10 @@
         case "insert_col":
         case "remove_col":
           grid.alter(action, {row: 0, col: from}, {row: 0, col: to});
+          break;
+
+        default:
+          throw Error('There is no such action "' + action + '"');
           break;
       }
     };
@@ -2580,7 +2637,9 @@
     'undo': true,
     'enterBeginsEditing': true,
     'enterMoves': {row: 1, col: 0},
-    'tabMoves': {row: 0, col: 1}
+    'tabMoves': {row: 0, col: 1},
+    'autoWrapRow': false,
+    'autoWrapCol': false
   };
 
   $.fn.handsontable = function (action, options) {
@@ -2702,17 +2761,11 @@ handsontable.UndoRedo.prototype.add = function (changes) {
  * @param {Object} instance
  */
 handsontable.BlockedRows = function (instance) {
-  var that = this;
   this.instance = instance;
   this.headers = [];
   var position = instance.table.position();
   instance.positionFix(position);
   this.main = $('<div style="position: absolute; top: ' + position.top + 'px; left: ' + position.left + 'px"><table cellspacing="0" cellpadding="0"><thead></thead></table></div>');
-  this.instance.container.on('datachange.handsontable', function (event, changes) {
-    setTimeout(function () {
-      that.dimensions(changes);
-    }, 10);
-  });
   this.instance.container.append(this.main);
   this.hasCSS3 = !($.browser.msie && (parseInt($.browser.version, 10) <= 8)); //Used to get over IE8- not having :last-child selector
   this.update();
@@ -2894,18 +2947,12 @@ handsontable.BlockedRows.prototype.headerText = function (str) {
  * @param {Object} instance
  */
 handsontable.BlockedCols = function (instance) {
-  var that = this;
   this.heightMethod = ($.browser.mozilla || $.browser.opera) ? "outerHeight" : "height";
   this.instance = instance;
   this.headers = [];
   var position = instance.table.position();
   instance.positionFix(position);
   this.main = $('<div style="position: absolute; top: ' + position.top + 'px; left: ' + position.left + 'px"><table cellspacing="0" cellpadding="0"><thead><tr></tr></thead><tbody></tbody></table></div>');
-  this.instance.container.on('datachange.handsontable', function (event, changes) {
-    setTimeout(function () {
-      that.dimensions(changes);
-    }, 10);
-  });
   this.instance.container.append(this.main);
 };
 
