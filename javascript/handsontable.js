@@ -127,13 +127,13 @@ require(['jquery', 'sakai/sakai.api.core',
 
         var showMainView = function(size, empty, tableData) {
 
-            renderTable(size, empty, tableData, $mainContainer);
+            renderTable(size, empty, tableData, $mainContainer, true);
             $mainContainer.find('.htColHeader.htRowHeader').css('min-width', '50px');
             $mainContainer.show();
 
         }
 
-        var renderTable = function(size, empty, tableData, $container) {
+        var renderTable = function(size, empty, tableData, $container, readOnlyVar) {
             $container.handsontable({
                 cols: size[0],
                 rows: size[1],
@@ -141,7 +141,13 @@ require(['jquery', 'sakai/sakai.api.core',
                 minSpareRows: empty[1],
                 colHeaders: true,
                 rowHeaders: true,
-                contextMenu: true
+                contextMenu: true,
+                legend: [{
+                    match: function(row, col, data) {
+                        return true;
+                    },
+                    readOnly: readOnlyVar
+                }]
             });
             $container.handsontable('loadData', tableData);
 
@@ -164,7 +170,7 @@ require(['jquery', 'sakai/sakai.api.core',
         };
 
         var showPreview = function(size, empty, tableData){
-            renderTable(size, empty, tableData, $previewTable);
+            renderTable(size, empty, tableData, $previewTable, false);
         }
 
 
